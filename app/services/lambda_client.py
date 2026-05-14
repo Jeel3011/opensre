@@ -329,6 +329,16 @@ def get_invocation_logs_by_request_id(
             },
         }
     except ClientError as e:
+        capture_boto3_exception(
+            e,
+            service="lambda",
+            operation="get_invocation_logs_by_request_id",
+            extras={
+                "function_name": function_name,
+                "request_id": request_id,
+                "log_group": log_group_name,
+            },
+        )
         return {"success": False, "error": str(e)}
 
 
@@ -382,6 +392,15 @@ def invoke_function(
             },
         }
     except ClientError as e:
+        capture_boto3_exception(
+            e,
+            service="lambda",
+            operation="invoke_function",
+            extras={
+                "function_name": function_name,
+                "invocation_type": invocation_type,
+            },
+        )
         return {"success": False, "error": str(e)}
 
 

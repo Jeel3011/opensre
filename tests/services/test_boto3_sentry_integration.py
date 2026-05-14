@@ -133,4 +133,5 @@ class TestLambdaClientSentryIntegration:
         assert kwargs["operation"] == "get_function_configuration"
         assert kwargs["extras"]["function_name"] == "test-function"
 
+
 # Made with Bob

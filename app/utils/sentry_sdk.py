@@ -252,31 +252,31 @@ def capture_boto3_exception(
         import sentry_sdk
         from botocore.exceptions import ClientError
 
-        # Set AWS-specific tags
-        sentry_sdk.set_tag("aws_service", service)
-        sentry_sdk.set_tag("aws_operation", operation)
-        sentry_sdk.set_tag("surface", "aws_sdk")
+        with sentry_sdk.push_scope() as scope:
+            # Set AWS-specific tags
+            scope.set_tag("aws_service", service)
+            scope.set_tag("aws_operation", operation)
+            scope.set_tag("surface", "aws_sdk")
 
-        # Extract status code and error code from ClientError
-        if isinstance(exc, ClientError):
-            response = getattr(exc, "response", {})
-            if isinstance(response, dict):
-                metadata = response.get("ResponseMetadata", {})
-                if isinstance(metadata, dict):
-                    status_code = metadata.get("HTTPStatusCode")
-                    if status_code:
-                        sentry_sdk.set_tag("http_status_code", status_code)
+            # Extract status code and error code from ClientError
+            if isinstance(exc, ClientError):
+                response = getattr(exc, "response", {})
+                if isinstance(response, dict):
+                    metadata = response.get("ResponseMetadata", {})
+                    if isinstance(metadata, dict):
+                        status_code = metadata.get("HTTPStatusCode")
+                        if status_code:
+                            scope.set_tag("http_status_code", status_code)
 
-                error_info = response.get("Error", {})
-                if isinstance(error_info, dict):
-                    error_code = error_info.get("Code")
-                    if error_code:
-                        sentry_sdk.set_tag("aws_error_code", error_code)
+                    error_info = response.get("Error", {})
+                    if isinstance(error_info, dict):
+                        error_code = error_info.get("Code")
+                        if error_code:
+                            scope.set_tag("aws_error_code", error_code)
 
-        # Attach extras
-        if extras:
-            for key, value in extras.items():
-                sentry_sdk.set_context(key, {"value": value})
+            # Attach extras as a single grouped context
+            if extras:
+                scope.set_context("aws_extras", extras)
 
-        sentry_sdk.capture_exception(exc)
+            sentry_sdk.capture_exception(exc)
         sentry_sdk.capture_exception(exc)
